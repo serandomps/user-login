@@ -1,9 +1,13 @@
 {
     "name": "user-login",
     "description": "user-login component",
-    "local": ["dust", "serand"],
+    "local": [],
     "styles": ["styles.css"],
     "scripts": ["index.js"],
     "templates": ["template.html"],
-    "main": "index.js"
+    "main": "index.js",
+    "dependencies": {
+        "serandomps/dust": "master",
+        "serandomps/serand": "master"
+    }
 }
