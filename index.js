@@ -28,7 +28,7 @@ module.exports = function (sanbox, fn, options) {
                 method: 'POST',
                 url: '/apis/v/tokens',
                 headers: {
-                    'x-host': 'accounts.serandives.com:4000'
+                    'x-host': 'accounts.serandives.com'
                 },
                 data: {
                     grant_type: 'password',
