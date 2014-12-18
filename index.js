@@ -43,6 +43,7 @@ module.exports = function (sanbox, fn, options) {
                         token: data.access_token,
                         expires: data.expires_in
                     };
+                    localStorage.user = JSON.stringify(user);
                     console.log('login successful');
                     serand.emit('user', 'logged in', user);
                 },
@@ -83,6 +84,7 @@ serand.on('user', 'logout', function (usr) {
         success: function (data) {
             console.log('logout successful');
             user = null;
+            localStorage.removeItem('user');
             serand.emit('user', 'logged out');
         },
         error: function () {
@@ -91,6 +93,13 @@ serand.on('user', 'logout', function (usr) {
         }
     });
 });
+
+if (localStorage.user) {
+    user = JSON.parse(localStorage.user);
+    console.log(user);
+    serand.emit('user', 'logged in', user);
+    console.log('local storage user');
+}
 
 /*
 
