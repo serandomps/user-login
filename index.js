@@ -43,10 +43,11 @@ module.exports = function (sanbox, fn, options) {
                         token: data.access_token,
                         expires: data.expires_in
                     };
-                    serand.emit('user', 'login', user);
+                    console.log('login successful');
+                    serand.emit('user', 'logged in', user);
                 },
                 error: function () {
-                    serand.emit('user', 'error');
+                    serand.emit('user', 'login error');
                 }
             });
             return false;
@@ -72,7 +73,23 @@ serand.on('boot', 'init', function () {
 });
 
 serand.on('user', 'logout', function (usr) {
-    user = null;
+    $.ajax({
+        method: 'DELETE',
+        url: '/apis/v/tokens/' + user.token,
+        headers: {
+            'x-host': 'accounts.serandives.com'
+        },
+        dataType: 'json',
+        success: function (data) {
+            console.log('logout successful');
+            user = null;
+            serand.emit('user', 'logged out');
+        },
+        error: function () {
+            console.log('logout error');
+            serand.emit('user', 'logout error');
+        }
+    });
 });
 
 /*
