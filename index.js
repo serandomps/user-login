@@ -97,8 +97,10 @@ serand.on('user', 'logout', function (usr) {
 if (localStorage.user) {
     user = JSON.parse(localStorage.user);
     console.log(user);
-    serand.emit('user', 'logged in', user);
-    console.log('local storage user');
+    setTimeout(function () {
+        serand.emit('user', 'logged in', user);
+        console.log('local storage user');
+    }, 0);
 }
 
 /*
