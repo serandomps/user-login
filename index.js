@@ -1,15 +1,47 @@
 var dust = require('dust')();
 var serand = require('serand');
 
+var REFRESH_BEFORE = 60;
+
 var user;
 
 var send = XMLHttpRequest.prototype.send;
 
 XMLHttpRequest.prototype.send = function () {
     if (user) {
-        this.setRequestHeader('Authorization', 'Bearer ' + user.token);
+        this.setRequestHeader('Authorization', 'Bearer ' + user.access);
     }
     send.apply(this, Array.prototype.slice.call(arguments));
+};
+
+var refresh = function () {
+    $.ajax({
+        method: 'POST',
+        url: '/apis/v/tokens',
+        headers: {
+            'x-host': 'accounts.serandives.com'
+        },
+        data: {
+            grant_type: 'refresh_token',
+            refresh_token: user.refresh_token
+        },
+        contentType: 'application/x-www-form-urlencoded',
+        dataType: 'json',
+        success: function (data) {
+            user = {
+                username: username,
+                access: data.access_token,
+                refresh: data.refresh_token,
+                expires: data.expires_in
+            };
+            localStorage.user = JSON.stringify(user);
+            console.log('token refresh successful');
+            setTimeout(refresh, user.expires - REFRESH_BEFORE);
+        },
+        error: function () {
+            console.log('token refresh error');
+        }
+    });
 };
 
 dust.loadSource(dust.compile(require('./template'), 'user-login'));
@@ -40,11 +72,13 @@ module.exports = function (sanbox, fn, options) {
                 success: function (data) {
                     user = {
                         username: username,
-                        token: data.access_token,
+                        access: data.access_token,
+                        refresh: data.refresh_token,
                         expires: data.expires_in
                     };
                     localStorage.user = JSON.stringify(user);
                     console.log('login successful');
+                    setTimeout(refresh, user.expires - EXPIRE_BEFORE);
                     serand.emit('user', 'logged in', user);
                 },
                 error: function () {
