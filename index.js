@@ -1,11 +1,53 @@
 var dust = require('dust')();
 var serand = require('serand');
 
-var REFRESH_BEFORE = 60;
+var REFRESH_BEFORE = 25 * 1000;
 
 var user;
 
 var send = XMLHttpRequest.prototype.send;
+
+var ajax = $.ajax;
+
+var fresh = false;
+
+var pending = false;
+
+var queue = [];
+
+$.ajax = function (options) {
+    var success = options.success;
+    var error = options.error;
+    options.success = function (data, status, xhr) {
+        if (xhr.status === 401) {
+            if (!fresh) {
+                console.log('transparently retrying unauthorized request');
+                pending = true;
+                refresh(function (err) {
+                    fresh = true;
+                    pending = false;
+                    options.success = success;
+                    options.error = error;
+                    $.ajax(options);
+                });
+                return;
+            }
+            if (pending) {
+                queue.push({
+                    options: options,
+                    success: success,
+                    error: error
+                });
+                return;
+            }
+        }
+        success.apply(null, Array.prototype.slice.call(arguments));
+    };
+    options.error = function (xhr, status, err) {
+        error.apply(null, Array.prototype.slice.call(arguments));
+    };
+    ajax.call($, options);
+};
 
 XMLHttpRequest.prototype.send = function () {
     if (user) {
@@ -14,7 +56,7 @@ XMLHttpRequest.prototype.send = function () {
     send.apply(this, Array.prototype.slice.call(arguments));
 };
 
-var refresh = function () {
+var refresh = function (done) {
     $.ajax({
         method: 'POST',
         url: '/apis/v/tokens',
@@ -23,13 +65,13 @@ var refresh = function () {
         },
         data: {
             grant_type: 'refresh_token',
-            refresh_token: user.refresh_token
+            refresh_token: user.refresh
         },
         contentType: 'application/x-www-form-urlencoded',
         dataType: 'json',
         success: function (data) {
             user = {
-                username: username,
+                username: user.username,
                 access: data.access_token,
                 refresh: data.refresh_token,
                 expires: data.expires_in
@@ -37,9 +79,15 @@ var refresh = function () {
             localStorage.user = JSON.stringify(user);
             console.log('token refresh successful');
             setTimeout(refresh, user.expires - REFRESH_BEFORE);
+            if (done) {
+                done();
+            }
         },
-        error: function () {
+        error: function (xhr) {
             console.log('token refresh error');
+            if (done) {
+                done(xhr);
+            }
         }
     });
 };
@@ -78,7 +126,10 @@ module.exports = function (sanbox, fn, options) {
                     };
                     localStorage.user = JSON.stringify(user);
                     console.log('login successful');
-                    setTimeout(refresh, user.expires - EXPIRE_BEFORE);
+                    setTimeout(refresh, user.expires - REFRESH_BEFORE);
+                    if (user) {
+                        serand.emit('user', 'logged out');
+                    }
                     serand.emit('user', 'logged in', user);
                 },
                 error: function () {
@@ -110,7 +161,7 @@ serand.on('boot', 'init', function () {
 serand.on('user', 'logout', function (usr) {
     $.ajax({
         method: 'DELETE',
-        url: '/apis/v/tokens/' + user.token,
+        url: '/apis/v/tokens/' + user.access,
         headers: {
             'x-host': 'accounts.serandives.com'
         },
