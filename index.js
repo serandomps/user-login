@@ -1,7 +1,7 @@
 var dust = require('dust')();
 var serand = require('serand');
 
-var REFRESH_BEFORE = 25 * 1000;
+var REFRESH_BEFORE = 3 * 1000;
 
 var user;
 
@@ -56,6 +56,15 @@ XMLHttpRequest.prototype.send = function () {
     send.apply(this, Array.prototype.slice.call(arguments));
 };
 
+var expires = function (expin) {
+    return new Date().getTime() + expin - REFRESH_BEFORE;
+};
+
+var next = function (expires) {
+    var exp = expires - new Date().getTime();
+    return exp > 0 ? exp : null;
+};
+
 var refresh = function (done) {
     $.ajax({
         method: 'POST',
@@ -74,11 +83,12 @@ var refresh = function (done) {
                 username: user.username,
                 access: data.access_token,
                 refresh: data.refresh_token,
-                expires: data.expires_in
+                expires: expires(data.expires_in)
             };
             localStorage.user = JSON.stringify(user);
             console.log('token refresh successful');
-            setTimeout(refresh, user.expires - REFRESH_BEFORE);
+            console.log('next refresh in : ' + Math.floor(next(user.expires) / 1000));
+            setTimeout(refresh, next(user.expires));
             if (done) {
                 done();
             }
@@ -122,11 +132,12 @@ module.exports = function (sanbox, fn, options) {
                         username: username,
                         access: data.access_token,
                         refresh: data.refresh_token,
-                        expires: data.expires_in
+                        expires: expires(data.expires_in)
                     };
                     localStorage.user = JSON.stringify(user);
                     console.log('login successful');
-                    setTimeout(refresh, user.expires - REFRESH_BEFORE);
+                    console.log('next refresh in : ' + Math.floor(next(user.expires) / 1000));
+                    setTimeout(refresh, next(user.expires));
                     if (user) {
                         serand.emit('user', 'logged out');
                     }
@@ -180,9 +191,17 @@ serand.on('user', 'logout', function (usr) {
 });
 
 if (localStorage.user) {
-    user = JSON.parse(localStorage.user);
-    console.log(user);
+    var usr = JSON.parse(localStorage.user);
+    console.log(usr);
+    var nxt = next(usr.expires);
+    if (!nxt) {
+        localStorage.removeItem('user');
+        return;
+    }
+    user = usr;
     setTimeout(function () {
+        console.log('next refresh in : ' + Math.floor(nxt / 1000));
+        setTimeout(refresh, nxt);
         serand.emit('user', 'logged in', user);
         console.log('local storage user');
     }, 0);
