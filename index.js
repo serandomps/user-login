@@ -1,7 +1,7 @@
 var dust = require('dust')();
 var serand = require('serand');
 
-var REFRESH_BEFORE = 3 * 1000;
+var REFRESH_BEFORE = 10 * 1000;
 
 var user;
 
