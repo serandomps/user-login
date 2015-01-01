@@ -41,12 +41,18 @@ $.ajax = function (options) {
                 return;
             }
         }
+        if (!success) {
+            return;
+        }
         success.apply(null, Array.prototype.slice.call(arguments));
     };
     options.error = function (xhr, status, err) {
+        if (!error) {
+            return;
+        }
         error.apply(null, Array.prototype.slice.call(arguments));
     };
-    ajax.call($, options);
+    return ajax.call($, options);
 };
 
 XMLHttpRequest.prototype.send = function () {
