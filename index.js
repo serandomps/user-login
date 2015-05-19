@@ -138,7 +138,19 @@ module.exports = function (sanbox, fn, options) {
                         username: username,
                         access: data.access_token,
                         refresh: data.refresh_token,
-                        expires: expires(data.expires_in)
+                        expires: expires(data.expires_in),
+                        permissions: {
+                            vehicles: {
+                                self: {
+                                    read: '*',
+                                    write: '*'
+                                },
+                                all: {
+                                    read: '*',
+                                    write: '*'
+                                }
+                            }
+                        }
                     };
                     localStorage.user = JSON.stringify(user);
                     console.log('login successful');
