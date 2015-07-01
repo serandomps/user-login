@@ -173,20 +173,6 @@ module.exports = function (sanbox, fn, options) {
     });
 };
 
-serand.on('boot', 'init', function () {
-    /*$.ajax({
-     url: '/apis/user',
-     contentType: 'application/json',
-     dataType: 'json',
-     success: function (data) {
-     serand.emit('user', 'login', data);
-     },
-     error: function () {
-     serand.emit('user', 'error');
-     }
-     });*/
-});
-
 serand.on('user', 'logout', function (usr) {
     $.ajax({
         method: 'DELETE',
