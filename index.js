@@ -120,51 +120,7 @@ module.exports = function (sanbox, fn, options) {
             var el = $('.user-login');
             var username = $('.username', el).val();
             var password = $('.password', el).val();
-            $.ajax({
-                method: 'POST',
-                url: '/apis/v/tokens',
-                headers: {
-                    'x-host': 'accounts.serandives.com'
-                },
-                data: {
-                    grant_type: 'password',
-                    username: username,
-                    password: password
-                },
-                contentType: 'application/x-www-form-urlencoded',
-                dataType: 'json',
-                success: function (data) {
-                    user = {
-                        username: username,
-                        access: data.access_token,
-                        refresh: data.refresh_token,
-                        expires: expires(data.expires_in),
-                        permissions: {
-                            vehicles: {
-                                self: {
-                                    read: '*',
-                                    write: '*'
-                                },
-                                all: {
-                                    read: '*',
-                                    write: '*'
-                                }
-                            }
-                        }
-                    };
-                    localStorage.user = JSON.stringify(user);
-                    console.log('login successful');
-                    console.log('next refresh in : ' + Math.floor(next(user.expires) / 1000));
-                    setTimeout(refresh, next(user.expires));
-                    if (user) {
-                        serand.emit('user', 'logged out');
-                    }
-                    serand.emit('user', 'logged in', user);
-                },
-                error: function () {
-                    serand.emit('user', 'login error');
-                }
-            });
+            serand.emit('user', 'authenticate', username, password);
             return false;
         });
         fn(false, function () {
@@ -172,48 +128,3 @@ module.exports = function (sanbox, fn, options) {
         });
     });
 };
-
-serand.on('user', 'logout', function (usr) {
-    $.ajax({
-        method: 'DELETE',
-        url: '/apis/v/tokens/' + user.access,
-        headers: {
-            'x-host': 'accounts.serandives.com'
-        },
-        dataType: 'json',
-        success: function (data) {
-            console.log('logout successful');
-            user = null;
-            localStorage.removeItem('user');
-            serand.emit('user', 'logged out');
-        },
-        error: function () {
-            console.log('logout error');
-            serand.emit('user', 'logout error');
-        }
-    });
-});
-
-if (localStorage.user) {
-    var usr = JSON.parse(localStorage.user);
-    console.log(usr);
-    var nxt = next(usr.expires);
-    if (!nxt) {
-        localStorage.removeItem('user');
-        return;
-    }
-    user = usr;
-    setTimeout(function () {
-        console.log('next refresh in : ' + Math.floor(nxt / 1000));
-        setTimeout(refresh, nxt);
-        serand.emit('user', 'logged in', user);
-        console.log('local storage user');
-    }, 0);
-}
-
-/*
-
- setTimeout(function () {
- var serand = require('serand');
- serand.emit('user', 'login', { username: 'ruchira'});
- }, 4000);*/
