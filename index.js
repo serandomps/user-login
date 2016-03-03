@@ -76,7 +76,7 @@ var refresh = function (done) {
         method: 'POST',
         url: '/apis/v/tokens',
         headers: {
-            'x-host': 'accounts.serandives.com'
+            'X-Host': 'accounts.serandives.com'
         },
         data: {
             grant_type: 'refresh_token',
