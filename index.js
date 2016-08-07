@@ -74,10 +74,7 @@ var next = function (expires) {
 var refresh = function (done) {
     $.ajax({
         method: 'POST',
-        url: '/apis/v/tokens',
-        headers: {
-            'X-Host': 'accounts.serandives.com'
-        },
+        url: 'https://accounts.serandives.com/apis/v/tokens',
         data: {
             grant_type: 'refresh_token',
             refresh_token: user.refresh
