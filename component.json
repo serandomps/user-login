@@ -8,6 +8,7 @@
     "main": "index.js",
     "dependencies": {
         "serandomps/dust": "master",
-        "serandomps/serand": "master"
+        "serandomps/serand": "master",
+        "serandomps/utils": "master"
     }
 }

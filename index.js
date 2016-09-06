@@ -1,5 +1,6 @@
 var dust = require('dust')();
 var serand = require('serand');
+var utils = require('utils');
 
 var REFRESH_BEFORE = 10 * 1000;
 
@@ -74,7 +75,7 @@ var next = function (expires) {
 var refresh = function (done) {
     $.ajax({
         method: 'POST',
-        url: 'https://accounts.serandives.com/apis/v/tokens',
+        url: utils.resolve('accounts://apis/v/tokens'),
         data: {
             grant_type: 'refresh_token',
             refresh_token: user.refresh
