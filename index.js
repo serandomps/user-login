@@ -93,25 +93,21 @@ var refresh = function (done) {
             console.log('token refresh successful');
             console.log('next refresh in : ' + Math.floor(next(user.expires) / 1000));
             setTimeout(refresh, next(user.expires));
-            if (done) {
-                done();
-            }
+            done(null, data);
         },
-        error: function (xhr) {
+        error: function (xhr, status, err) {
             console.log('token refresh error');
-            if (done) {
-                done(xhr);
-            }
+            done(err || status || xhr);
         }
     });
 };
 
 dust.loadSource(dust.compile(require('./template'), 'user-login'));
 
-module.exports = function (sanbox, fn, options) {
+module.exports = function (sanbox, options, done) {
     dust.render('user-login', {}, function (err, out) {
         if (err) {
-            return;
+            return done(err);
         }
         sanbox.append(out);
         sanbox.on('click', '.user-login .login', function (e) {
@@ -121,7 +117,7 @@ module.exports = function (sanbox, fn, options) {
             serand.emit('user', 'authenticate', username, password);
             return false;
         });
-        fn(false, function () {
+        done(null, function () {
             sanbox.remove('.user-login');
         });
     });
