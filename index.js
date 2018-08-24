@@ -75,7 +75,7 @@ var next = function (expires) {
 var refresh = function (done) {
     $.ajax({
         method: 'POST',
-        url: utils.resolve('accounts://apis/v/tokens'),
+        url: utils.resolve('accounts:///apis/v/tokens'),
         data: {
             grant_type: 'refresh_token',
             refresh_token: user.refresh
